@@ -41,6 +41,7 @@
 
 #include <sensor_msgs/Joy.h>
 #include <std_msgs/Int16.h>
+#include <std_msgs/Float32.h>
 #include <sensor_msgs/BatteryState.h>
 #include <ros/ros.h>
 
@@ -51,6 +52,7 @@ class RemoteReciever
 public:
   double battery_voltage_;
   double battery_percentage_;
+  double distance_;
   RemoteReciever()
   {
     joy_publisher_ = nh_.advertise<sensor_msgs::Joy>("/rviz_visual_tools_gui", 1);
@@ -58,11 +60,19 @@ public:
     steering_publisher_ = nh_.advertise<std_msgs::Int16>("/robot/steering", 1);
     servo_publisher_ = nh_.advertise<std_msgs::Int16>("/robot/set_servo_pos", 1);
 
-    battery_subs_ = nh_.subscribe("/robot/battery/info", 1, &RemoteReciever::inputBattery, this);
+    battery_subs_  = nh_.subscribe("/robot/battery/info", 1, &RemoteReciever::inputBattery, this);
+    distance_subs_ = nh_.subscribe("/robot/sharp_dis", 1, &RemoteReciever::inputDistance, this);    
     //  sub_pose1_  = nh.subscribe("/cam_pose_in_world", 1, &SimpleKfNode::inputPoseCb, this);
   }
 
-  void inputBattery(sensor_msgs::BatteryState msg)
+  
+  void inputDistance(std_msgs::Float32 msg)
+  {
+      ROS_INFO_STREAM_NAMED("received distance value", "distance value received");
+      distance_ = msg.data;
+  }
+
+   void inputBattery(sensor_msgs::BatteryState msg)
   {
       ROS_INFO_STREAM_NAMED("received bat value", "battery value received");
       battery_voltage_ = msg.voltage;
@@ -136,6 +146,8 @@ protected:
   ros::Publisher servo_publisher_;
 
   ros::Subscriber battery_subs_;
+  ros::Subscriber distance_subs_;
+
   // The ROS node handle.
   ros::NodeHandle nh_;
 };

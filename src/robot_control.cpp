@@ -56,24 +56,14 @@ namespace rviz_robot_plugins
 RobotControl::RobotControl(QWidget* parent) : rviz::Panel(parent)
 {
   // Create a push button
-  btn_next_ = new QPushButton(this);
-  btn_next_->setText("Next");
-  connect(btn_next_, SIGNAL(clicked()), this, SLOT(moveNext()));
+  control_mode_ = new QPushButton(this);
+  control_mode_->setText("Control Mode: ");
+  connect(control_mode_, SIGNAL(clicked()), this, SLOT(changeControl()));
 
   // Create a push button
-  btn_auto_ = new QPushButton(this);
-  btn_auto_->setText("Continue");
-  connect(btn_auto_, SIGNAL(clicked()), this, SLOT(moveAuto()));
-
-  // Create a push button
-  btn_full_auto_ = new QPushButton(this);
-  btn_full_auto_->setText("Break");
-  connect(btn_full_auto_, SIGNAL(clicked()), this, SLOT(moveFullAuto()));
-
-  // Create a push button
-  btn_stop_ = new QPushButton(this);
-  btn_stop_->setText("Stop");
-  connect(btn_stop_, SIGNAL(clicked()), this, SLOT(moveStop()));
+  reset_ = new QPushButton(this);
+  reset_->setText("Reset");
+  connect(reset_, SIGNAL(clicked()), this, SLOT(reset()));
 
   // Create slider back_motors
   slid_back_ = new QSlider(Qt::Horizontal, this);
@@ -100,9 +90,12 @@ RobotControl::RobotControl(QWidget* parent) : rviz::Panel(parent)
   // Timer for callback updates:
   timer_ = new QTimer(this);
   connect(timer_, SIGNAL(timeout()), this, SLOT(updateLabels()));
-  timer_->start(1000); //time specified in ms
+  timer_->start(200); //time specified in ms
 
   // Label:
+  label_by_hand_ = new QLabel(this);
+  label_by_hand_->setText("By Hand Control:");
+
   label_back_value_ = new QLabel(this);
   label_back_value_->setText("Back: ");
 
@@ -113,15 +106,39 @@ RobotControl::RobotControl(QWidget* parent) : rviz::Panel(parent)
   label_servo_value_->setText("Serv: ");
 
   label_battvoltage_value_ = new QLabel(this);
-  label_battvoltage_value_->setText("Battery Voltage: >3.2V <4.1V");
+  label_battvoltage_value_->setText("Battery Voltage: >3.2V <4.1V, Distance 10cm to 80cm");
+
+  label_automatic_ = new QLabel(this);
+  label_automatic_->setText("Automatic:");
+
+  label_x_des_ = new QLabel(this);
+  label_x_des_->setText("xdes: ");
+
+  label_y_des_ = new QLabel(this);
+  label_y_des_->setText("ydes: ");
+
+
+  slid_xdes_ = new QSlider(Qt::Horizontal, this);
+  slid_xdes_->setMaximum(250);
+  slid_xdes_->setMinimum(-10);
+  slid_xdes_->setValue(0);
+  connect(slid_xdes_, SIGNAL(valueChanged(int)), this, SLOT(xDes(int)));
+
+  slid_ydes_ = new QSlider(Qt::Horizontal, this);
+  slid_ydes_->setMaximum(250);
+  slid_ydes_->setMinimum(-10);
+  slid_ydes_->setValue(0);
+  connect(slid_ydes_, SIGNAL(valueChanged(int)), this, SLOT(yDes(int)));
+
 
   // Horizontal Layout Buttons
   auto* hlayout1 = new QHBoxLayout;
-  hlayout1->addWidget(btn_next_);
-  hlayout1->addWidget(btn_auto_);
-  hlayout1->addWidget(btn_full_auto_);
-  hlayout1->addWidget(btn_stop_);
+  hlayout1->addWidget(control_mode_);
+  hlayout1->addWidget(reset_);
 
+  // ue1:
+  auto* hlayout0 = new QHBoxLayout;
+  hlayout0->addWidget(label_by_hand_);
 
   // Horizontal Layout Slider
   auto* hlayout2 = new QHBoxLayout;
@@ -139,37 +156,44 @@ RobotControl::RobotControl(QWidget* parent) : rviz::Panel(parent)
   auto* hlayout5 = new QHBoxLayout;
   hlayout5->addWidget(label_battvoltage_value_);
 
+  auto* hlayout6 = new QHBoxLayout;
+  hlayout6->addWidget(label_automatic_);
+
+  auto* hlayout7 = new QHBoxLayout;
+  hlayout7->addWidget(label_x_des_);
+  hlayout7->addWidget(slid_xdes_);
+  hlayout7->addWidget(label_y_des_);
+  hlayout7->addWidget(slid_ydes_);
+
   // Verticle layout
   auto* layout = new QVBoxLayout;
+  layout->addLayout(hlayout1);
+  layout->addLayout(hlayout0);
   layout->addLayout(hlayout2);
   layout->addLayout(hlayout3);
   layout->addLayout(hlayout4);
   layout->addLayout(hlayout5);
-  layout->addLayout(hlayout1);
-
+  layout->addLayout(hlayout6);
+  layout->addLayout(hlayout7);
   setLayout(layout);
-
-  btn_next_->setEnabled(true);
-  btn_auto_->setEnabled(true);
-  btn_full_auto_->setEnabled(true);
 }
 
-void RobotControl::moveNext()
+void RobotControl::changeControl()
 {
-  remote_reciever_.publishNext();
+ //TODO
 }
 
-void RobotControl::moveAuto()
+void RobotControl::xDes(int value)
 {
-  remote_reciever_.publishContinue();
+   label_x_des_->setText("xdes: "+QString::number(value));
 }
 
-void RobotControl::moveFullAuto()
+void RobotControl::yDes(int value)
 {
-  remote_reciever_.publishBreak();
+   label_y_des_->setText("ydes: "+QString::number(value));
 }
 
-void RobotControl::moveStop()
+void RobotControl::reset()
 {
     slid_steering_->setValue(0);
     slid_servo_->setValue(105);
@@ -183,20 +207,20 @@ void RobotControl::save(rviz::Config config) const
 
 void RobotControl::valueBack(int value)
 {
-  
   label_back_value_->setText(QString::number(value));
   remote_reciever_.publishBack(value);
 }
 
 void RobotControl::updateLabels()
 {
-  label_battvoltage_value_->setText("Battery: "+QString::number(ROUND2(remote_reciever_.battery_voltage_))+"V, "+ QString::number(ROUND2(remote_reciever_.battery_percentage_))+"%");
+  label_battvoltage_value_->setText("Battery: "+QString::number(ROUND2(remote_reciever_.battery_voltage_))+
+  "V, "+ QString::number(ROUND2(remote_reciever_.battery_percentage_))+"%"
+  +" Distance: "+QString::number(ROUND3(remote_reciever_.distance_))+" m");
 }
 
 // sliders:
 void RobotControl::valueForward(int value)
 {
-  
   label_forward_value_->setText(QString::number(value));
   remote_reciever_.publishForward(value);
 }

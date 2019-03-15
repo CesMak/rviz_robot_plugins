@@ -54,6 +54,7 @@
 #include "remote_reciever.h"
 
 #define ROUND2(x) std::round(x * 100) / 100
+#define ROUND3(x) std::round(x * 1000) / 1000
 
 class QLineEdit;
 class QSpinBox;
@@ -74,13 +75,11 @@ public Q_SLOTS:
 
 protected Q_SLOTS:
 
-  void moveNext();
 
-  void moveAuto();
-
-  void moveFullAuto();
-
-  void moveStop();
+  void changeControl();
+  void reset();
+  void yDes(int);
+  void xDes(int);
 
   void valueBack(int);
   void valueForward(int);
@@ -88,16 +87,20 @@ protected Q_SLOTS:
   void updateLabels();
 
 protected:
-  QPushButton* btn_next_;
-  QPushButton* btn_auto_;
-  QPushButton* btn_full_auto_;
-  QPushButton* btn_stop_;
+  QPushButton* control_mode_;
+  QPushButton* reset_;
   QTimer *timer_;
 
   QSlider* slid_back_;
   QLabel* label_back_value_;
+  QLabel* label_by_hand_;
+  QLabel* label_automatic_;
+  QLabel* label_x_des_;
+  QLabel* label_y_des_;
 
   QSlider* slid_steering_;
+  QSlider* slid_xdes_;
+  QSlider* slid_ydes_;
   QLabel* label_forward_value_;
 
   QSlider* slid_servo_;
