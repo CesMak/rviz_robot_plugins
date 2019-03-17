@@ -1,13 +1,19 @@
 # rviz_robot_plugins
 
-Plugin to control a robot using sliders in rviz. 
 
+## Overview
 
+Plugin to control a robot using sliders in rviz. Remote control plugin for rviz.
+
+**Author: Markus Lamprecht<br />
+Maintainer: Markus Lamprecht, 2f4yor@gmail.com<br />**
+
+<img alt="alfons" src="media/robot_control.png" width="700">
 
 ## Demo
 ``` 
 roscore
-rosrun rviz rviz (seperal terminal)
+rosrun rviz rviz #(seperal terminal)
 ``` 
 In Rviz add the panel via: Panels->Add New Panel -> rviz_plugin_tutorials -> RobotControl
 
@@ -35,6 +41,7 @@ rviz_robot_plugins::ImuDisplay
 
 ## Types:
 in Rviz there are different types (and they are added differntly)
+
 * Panel (new panel...)
 * Tool  (flag etc.)
 * Display with main add button bottom left)
